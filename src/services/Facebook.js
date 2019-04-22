@@ -1,5 +1,5 @@
 /*global FB*/
-import { flatten } from "lodash";
+import { shuffle } from "lodash";
 
 export default class FacebookService {
   init() {
@@ -41,37 +41,20 @@ export default class FacebookService {
     });
   }
 
-  async fetchFeed() {
+  async fetchRandomFromFeed() {
     const response = await this.api("/me/feed", "get", {
       fields: [
         "type",
         "created_time",
         "message",
         "picture",
+        "full_picture",
         "link",
         "attachments"
       ],
       limit: 1000
     });
-    return response.data;
-  }
-
-  async fetchLikes() {
-    const response = await this.api("me/likes", "get", {
-      fields: ["created_time", "picture", "link"],
-      limit: 1000
-    });
-    const items = response.data;
-    return items.map(item => {
-      item.type = "like";
-      return item;
-    });
-  }
-
-  async fetchAll() {
-    const calls = [this.fetchFeed(), this.fetchLikes()];
-    const itemLists = await Promise.all(calls);
-    return flatten(itemLists);
+    return shuffle(response.data);
   }
 
   _injectLib() {

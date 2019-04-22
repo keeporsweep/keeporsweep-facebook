@@ -11,11 +11,12 @@
         <div>Loading…</div>
       </div>
       <div v-else-if="item">
-        <button v-on:click="pick">Next</button>
+        <button v-on:click="keep">Keep</button>
+        <button v-on:click="sweep">Sweep</button>
         <div>{{ new Date(item.created_time).toLocaleString() }}</div>
         <div v-if="item && item.message">{{ item.message }}</div>
         <div v-if="item && item.picture">
-          <img :key="item.picture" :src="item.picture" />
+          <img :key="item.full_picture" :src="item.full_picture" />
         </div>
       </div>
     </div>
@@ -24,7 +25,6 @@
 
 <script>
 import FacebookService from "../services/Facebook";
-import { random } from "lodash";
 
 const facebookService = new FacebookService();
 
@@ -37,7 +37,8 @@ export default {
       loginStatus: null,
       isLoadingItems: false,
       items: [],
-      item: null
+      itemsToSweep: [],
+      itemsToKeep: []
     };
   },
   async created() {
@@ -49,13 +50,14 @@ export default {
   methods: {
     async loadItems() {
       this.isLoadingItems = true;
-      this.items = await facebookService.fetchAll();
+      this.items = await facebookService.fetchRandomFromFeed();
       this.isLoadingItems = false;
-      this.pick();
     },
-    pick() {
-      const randomIndex = random(this.items.length - 1);
-      this.item = this.items[randomIndex];
+    keep() {
+      this.itemsToKeep.push(this.items.shift());
+    },
+    sweep() {
+      this.itemsToSweep.push(this.items.shift());
     },
     async login() {
       this.isLoggingIn = true;
@@ -66,6 +68,11 @@ export default {
     async logout() {
       const logingStatus = await facebookService.logout();
       this.loginStatus = logingStatus;
+    }
+  },
+  computed: {
+    item() {
+      return this.items[0];
     }
   },
   watch: {
