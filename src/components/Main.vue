@@ -7,9 +7,8 @@
     </div>
     <div v-else>
       <button v-on:click="logout">Logout</button>
-      <div v-if="isLoadingItems">
-        <div>Loading…</div>
-      </div>
+      <div v-if="errorLoadingItems" style="color: red">Error</div>
+      <div v-if="isLoadingItems">Loading…</div>
       <div v-else-if="item">
         <button v-on:click="keep">Keep</button>
         <button v-on:click="sweep">Sweep</button>
@@ -39,6 +38,7 @@ export default {
       isLoggingIn: false,
       loginStatus: null,
       isLoadingItems: false,
+      errorLoadingItems: false,
       items: [],
       itemsToSweep: [],
       itemsToKeep: []
@@ -52,9 +52,16 @@ export default {
   },
   methods: {
     async loadItems() {
+      this.errorLoadingItems = false;
       this.isLoadingItems = true;
-      this.items = await facebookService.fetchRandomFromFeed();
-      this.isLoadingItems = false;
+      try {
+        this.items = await facebookService.fetchRandomFromFeed();
+        this.isLoadingItems = false;
+      } catch (error) {
+        this.isLoadingItems = false;
+        this.errorLoadingItems = true;
+        throw error;
+      }
     },
     keep() {
       this.itemsToKeep.push(this.items.shift());

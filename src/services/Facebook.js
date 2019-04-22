@@ -36,8 +36,14 @@ export default class FacebookService {
   }
 
   api(path, method, params) {
-    return new Promise(resolve => {
-      FB.api(path, method, params, response => resolve(response));
+    return new Promise((resolve, reject) => {
+      FB.api(path, method, params, response => {
+        if (response.error) {
+          reject(response.error);
+          return;
+        }
+        resolve(response);
+      });
     });
   }
 
