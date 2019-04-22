@@ -12,15 +12,21 @@
       </div>
       <div v-else-if="item">
         <button v-on:click="pick">Next</button>
-        <div v-if="item">{{ item.message }}</div>
+        <div>{{ new Date(item.created_time).toLocaleString() }}</div>
+        <div v-if="item && item.message">{{ item.message }}</div>
+        <div v-if="item && item.picture">
+          <img :key="item.picture" :src="item.picture" />
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-/*global FB*/
+import FacebookService from "../services/Facebook";
 import { random } from "lodash";
+
+const facebookService = new FacebookService();
 
 export default {
   name: "Main",
@@ -34,63 +40,32 @@ export default {
       item: null
     };
   },
-  created() {
-    window.fbAsyncInit = () => {
-      FB.init({
-        appId: process.env.VUE_APP_FACEBOOK_APP_ID,
-        autoLogAppEvents: true,
-        xfbml: false,
-        version: "v3.2"
-      });
-
-      FB.getLoginStatus(response => {
-        this.loginStatus = response;
-        this.initializingDone = true;
-      });
-    };
-
-    (function(d, s, id) {
-      var js,
-        fjs = d.getElementsByTagName(s)[0];
-      if (d.getElementById(id)) {
-        return;
-      }
-      js = d.createElement(s);
-      js.id = id;
-      js.src = "//connect.facebook.net/en_US/sdk.js";
-      fjs.parentNode.insertBefore(js, fjs);
-    })(document, "script", "facebook-jssdk");
+  async created() {
+    await facebookService.init();
+    const loginStatus = await facebookService.getLoginStatus();
+    this.loginStatus = loginStatus;
+    this.initializingDone = true;
   },
   methods: {
-    loadItems() {
+    async loadItems() {
       this.isLoadingItems = true;
-      FB.api(
-        "/me/feed",
-        "get",
-        {
-          limit: 1000
-        },
-        response => {
-          this.isLoadingItems = false;
-          const posts = response.data.filter(item => !!item.message);
-          this.items = this.items.concat(posts);
-          this.pick();
-        }
-      );
+      this.items = await facebookService.fetchAll();
+      this.isLoadingItems = false;
+      this.pick();
     },
     pick() {
       const randomIndex = random(this.items.length - 1);
       this.item = this.items[randomIndex];
     },
-    login() {
+    async login() {
       this.isLoggingIn = true;
-      FB.login(response => {
-        this.loginStatus = response;
-        this.isLoggingIn = false;
-      });
+      const loginStatus = await facebookService.login();
+      this.loginStatus = loginStatus;
+      this.isLoggingIn = false;
     },
-    logout() {
-      FB.logout(response => (this.loginStatus = response));
+    async logout() {
+      const logingStatus = await facebookService.logout();
+      this.loginStatus = logingStatus;
     }
   },
   watch: {
