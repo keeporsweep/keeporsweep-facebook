@@ -15,6 +15,9 @@
         <button v-on:click="sweep">Sweep</button>
         <div>{{ new Date(item.created_time).toLocaleString() }}</div>
         <div v-if="item && item.message">{{ item.message }}</div>
+        <div>
+          <a :href="item.permalink_url" target="_blank">Permalink</a>
+        </div>
         <div v-if="item && item.picture">
           <img :key="item.full_picture" :src="item.full_picture" />
         </div>

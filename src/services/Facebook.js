@@ -50,6 +50,7 @@ export default class FacebookService {
         "picture",
         "full_picture",
         "link",
+        "permalink_url",
         "attachments"
       ],
       limit: 1000
